@@ -30,8 +30,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# local env files
+.env*.local
+.env*.development
 
 # vercel
 .vercel
@@ -39,3 +40,16 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+### project ###
+*.DS_Store
+docker-compose*dev.yml
+
+### history ###
+.history
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
