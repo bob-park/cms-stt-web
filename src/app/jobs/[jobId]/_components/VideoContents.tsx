@@ -1,8 +1,11 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 
 import { FaPause, FaPlay } from 'react-icons/fa6';
+import { GrRevert } from 'react-icons/gr';
+
+import { SttContentsContext } from '@/app/jobs/[jobId]/_components/SttContentsProvider';
 
 import { TimeCode } from '@/domain/timecode/model/timecode';
 
@@ -19,6 +22,9 @@ export function VideoContents({ jobId }: JobContentsProps) {
   // useRef
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  // context
+  const { contents, current, onUpdateCurrent } = useContext(SttContentsContext);
+
   // state
   const [showControl, setShowControl] = useState<boolean>(true);
   const [isPlay, setIsPlay] = useState<boolean>(false);
@@ -32,6 +38,10 @@ export function VideoContents({ jobId }: JobContentsProps) {
     handleResizeVideoWidth();
     window.addEventListener('resize', handleResizeVideoWidth);
   }, []);
+
+  useEffect(() => {
+    console.log(current);
+  }, [current]);
 
   // handle
   const handleResizeVideoWidth = () => {
@@ -94,12 +104,29 @@ export function VideoContents({ jobId }: JobContentsProps) {
     }
   };
 
+  const handleTimeUpdate = () => {
+    if (!videoRef.current) {
+      return;
+    }
+
+    const currentTime = videoRef.current.currentTime;
+
+    setCurrentTime(currentTime);
+
+    const content = contents.find((item) => item.startTime <= currentTime && item.endTime >= currentTime);
+
+    if (content) {
+      onUpdateCurrent && onUpdateCurrent(content.id);
+    }
+  };
+
   return (
     <div
       className="relative flex flex-col items-center justify-center gap-3 rounded-2xl bg-black p-3 select-none"
       onMouseEnter={() => setShowControl(true)}
       onMouseLeave={() => setShowControl(false)}
     >
+      {/* video */}
       <video
         ref={videoRef}
         style={{ width: '100%', height: '484px' }}
@@ -107,10 +134,12 @@ export function VideoContents({ jobId }: JobContentsProps) {
         src={`/api/v1/assets/1/stt/jobs/${jobId}/resource`}
         autoPlay
         onLoadedMetadataCapture={handleLoadedMetadata}
-        onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
+        onTimeUpdate={handleTimeUpdate}
         onPlay={() => setIsPlay(true)}
         onPause={() => setIsPlay(false)}
       />
+
+      {/* control */}
       <div
         className={cx(
           'absolute top-0 left-0 size-full rounded-2xl bg-black/70 transition-all transition-discrete',
@@ -120,7 +149,13 @@ export function VideoContents({ jobId }: JobContentsProps) {
         <div className="relative size-full">
           <div className="absolute bottom-0 left-0 flex w-full flex-col items-center justify-center gap-3 px-5 py-2">
             {/* progress */}
-            <div className="relative h-1 w-full cursor-pointer rounded-2xl bg-gray-400" onMouseMove={handleMouseMove}>
+            <div
+              className="relative flex h-10 w-full cursor-pointer flex-col items-center justify-center rounded-2xl"
+              onMouseMove={handleMouseMove}
+            >
+              {/* duration */}
+              <div className="absolute left-0 h-1 w-full cursor-pointer bg-gray-400"></div>
+
               {/* current time */}
               <div
                 className="absolute left-0 h-1 cursor-pointer bg-red-600"
@@ -129,7 +164,7 @@ export function VideoContents({ jobId }: JobContentsProps) {
 
               {/* current navigator */}
               <div
-                className="absolute -top-[6px] size-4 rounded-full bg-red-600"
+                className="absolute top-auto size-4 rounded-full bg-red-600"
                 style={{ left: `${(currentTime / duration) * 100}%` }}
               ></div>
             </div>
@@ -137,15 +172,32 @@ export function VideoContents({ jobId }: JobContentsProps) {
             {/* control */}
             <div className="flex w-full flex-row items-center gap-3">
               {/* play */}
-              <button
-                className="btn btn-ghost text-gray-300 hover:text-black"
-                type="button"
-                onClick={() => {
-                  isPlay ? handlePause() : handlePlay();
-                }}
-              >
-                {isPlay ? <FaPause className="size-6" /> : <FaPlay className="size-6" />}
-              </button>
+              {currentTime >= duration ? (
+                <button
+                  className="btn btn-ghost text-gray-300 hover:text-black"
+                  type="button"
+                  onClick={() => {
+                    if (!videoRef.current) {
+                      return;
+                    }
+
+                    videoRef.current.currentTime = 0;
+                    handlePlay();
+                  }}
+                >
+                  <GrRevert className="size-6" />
+                </button>
+              ) : (
+                <button
+                  className="btn btn-ghost text-gray-300 hover:text-black"
+                  type="button"
+                  onClick={() => {
+                    isPlay ? handlePause() : handlePlay();
+                  }}
+                >
+                  {isPlay ? <FaPause className="size-6" /> : <FaPlay className="size-6" />}
+                </button>
+              )}
 
               {/* time */}
               <div className="flex flex-row items-center justify-center gap-3 text-gray-300">
@@ -166,6 +218,28 @@ export function VideoContents({ jobId }: JobContentsProps) {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* 자막 */}
+
+      <div
+        className={cx(
+          'absolute left-auto flex items-center justify-center gap-3',
+          showControl ? 'bottom-24' : 'bottom-20',
+        )}
+      >
+        {current && (
+          <div className="flex flex-col items-center justify-center gap-1 rounded-2xl bg-black/50 px-2 py-2 text-lg text-white">
+            <div className="">
+              <span>[</span>
+              <span>{current.speaker?.speakerName || current.speaker?.speaker || 'Unknown'}</span>
+              <span>]</span>
+            </div>
+            <div className="max-w-[300px] text-center text-pretty break-keep">
+              <span>{current.text}</span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

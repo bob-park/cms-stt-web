@@ -36,7 +36,7 @@ export default function RootLayout({
               <Header />
             </div>
 
-            <div className="flex">
+            <div className="flex w-full">
               {/* content */}
               <div className="mx-3 my-7 size-full p-3">{children}</div>
             </div>
