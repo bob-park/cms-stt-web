@@ -39,10 +39,6 @@ export function VideoContents({ jobId }: JobContentsProps) {
     window.addEventListener('resize', handleResizeVideoWidth);
   }, []);
 
-  useEffect(() => {
-    console.log(current);
-  }, [current]);
-
   // handle
   const handleResizeVideoWidth = () => {
     if (!videoRef.current) {
@@ -147,18 +143,18 @@ export function VideoContents({ jobId }: JobContentsProps) {
         )}
       >
         <div className="relative size-full">
-          <div className="absolute bottom-0 left-0 flex w-full flex-col items-center justify-center gap-3 px-5 py-2">
+          <div className="absolute bottom-0 left-0 flex w-full flex-col items-center justify-center gap-1 px-5 py-2">
             {/* progress */}
             <div
               className="relative flex h-10 w-full cursor-pointer flex-col items-center justify-center rounded-2xl"
               onMouseMove={handleMouseMove}
             >
               {/* duration */}
-              <div className="absolute left-0 h-1 w-full cursor-pointer bg-gray-400"></div>
+              <div className="absolute left-0 h-1 w-full cursor-pointer rounded-2xl bg-gray-400"></div>
 
               {/* current time */}
               <div
-                className="absolute left-0 h-1 cursor-pointer bg-red-600"
+                className="absolute left-0 h-1 cursor-pointer rounded-l-2xl bg-red-600"
                 style={{ width: `${(currentTime / duration) * 100}%` }}
               ></div>
 
@@ -170,7 +166,7 @@ export function VideoContents({ jobId }: JobContentsProps) {
             </div>
 
             {/* control */}
-            <div className="flex w-full flex-row items-center gap-3">
+            <div className="-mt-2 mb-4 flex w-full flex-row items-center gap-3">
               {/* play */}
               {currentTime >= duration ? (
                 <button
@@ -229,7 +225,7 @@ export function VideoContents({ jobId }: JobContentsProps) {
         )}
       >
         {current && (
-          <div className="flex flex-col items-center justify-center gap-1 rounded-2xl bg-black/50 px-2 py-2 text-lg text-white">
+          <div className="flex w-fit flex-col items-center justify-center gap-1 rounded-2xl bg-black/50 px-2 py-2 text-lg text-white">
             <div className="">
               <span>[</span>
               <span>{current.speaker?.speakerName || current.speaker?.speaker || 'Unknown'}</span>
