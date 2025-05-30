@@ -7,7 +7,7 @@ import { useAssetSttText } from '@/domain/assets/query/assetSttText';
 interface SttContentsContextState {
   contents: AssetSttText[];
   current?: AssetSttText;
-  onUpdateCurrent?: (id: string) => void;
+  onUpdateCurrent?: (id?: string) => void;
 }
 
 export const SttContentsContext = createContext<SttContentsContextState>({
@@ -32,7 +32,12 @@ export default function SttContentsProvider({ children, assetId, jobId }: SttCon
     () => ({
       contents: texts?.content || [],
       current,
-      onUpdateCurrent: (id: string) => {
+      onUpdateCurrent: (id?: string) => {
+        if (!id) {
+          setCurrent(undefined);
+          return;
+        }
+
         const contents = texts?.content || [];
 
         const content = contents.find((item) => item.id === id);

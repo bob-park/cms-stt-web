@@ -26,7 +26,7 @@ export function VideoContents({ jobId }: JobContentsProps) {
   const { contents, current, onUpdateCurrent } = useContext(SttContentsContext);
 
   // state
-  const [showControl, setShowControl] = useState<boolean>(true);
+  const [showControl, setShowControl] = useState<boolean>(false);
   const [isPlay, setIsPlay] = useState<boolean>(false);
   const [duration, setDuration] = useState<number>(0);
   const [currentTime, setCurrentTime] = useState<number>(0);
@@ -50,13 +50,14 @@ export function VideoContents({ jobId }: JobContentsProps) {
     const vw = window.innerWidth;
 
     let videoWidth = vw - 60;
+    const videoHeight = '100%';
 
     if (vw > STANDARD_WIDTH) {
       videoWidth -= STANDARD_TEXT_WIDTH;
     }
 
     video.style.width = `${videoWidth}px`;
-    video.style.height = '100%';
+    video.style.height = videoHeight;
   };
 
   const handleLoadedMetadata = () => {
@@ -111,9 +112,7 @@ export function VideoContents({ jobId }: JobContentsProps) {
 
     const content = contents.find((item) => item.startTime <= currentTime && item.endTime >= currentTime);
 
-    if (content) {
-      onUpdateCurrent && onUpdateCurrent(content.id);
-    }
+    onUpdateCurrent && onUpdateCurrent(content?.id);
   };
 
   return (
@@ -126,9 +125,9 @@ export function VideoContents({ jobId }: JobContentsProps) {
       <video
         ref={videoRef}
         style={{ width: '100%', height: '484px' }}
-        className="aspect-auto rounded-2xl"
+        className="aspect-auto max-h-[800px] rounded-2xl"
         src={`/api/v1/assets/1/stt/jobs/${jobId}/resource`}
-        autoPlay
+        // autoPlay
         onLoadedMetadataCapture={handleLoadedMetadata}
         onTimeUpdate={handleTimeUpdate}
         onPlay={() => setIsPlay(true)}

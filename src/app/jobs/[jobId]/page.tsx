@@ -7,17 +7,20 @@ export default async function JobPage({ params }: { params: Promise<{ jobId: str
   const jobId = (await params).jobId;
 
   return (
-    <div className="flex size-full flex-col gap-3 lg:flex-row">
-      <SttContentsProvider assetId={1} jobId={jobId}>
+    <SttContentsProvider assetId={1} jobId={jobId}>
+      <div className="flex size-full flex-col gap-3 lg:flex-row">
         {/*  contents  */}
-        <div className="flex-1">
-          <VideoContents jobId={jobId} />
+        <div className="flex flex-col gap-3">
+          <div className="">
+            <VideoContents jobId={jobId} />
+          </div>
+          <div className="">화자</div>
         </div>
 
-        <div className="h-[500px] w-full lg:h-[calc(100vh-250px)] lg:w-[450px] lg:flex-none">
+        <div className="h-[500px] w-full lg:h-[calc(100vh-250px)] lg:w-[450px] lg:flex-none lg:shrink">
           <SttContents />
         </div>
-      </SttContentsProvider>
-    </div>
+      </div>
+    </SttContentsProvider>
   );
 }

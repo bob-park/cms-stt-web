@@ -21,6 +21,10 @@ export default function SttContents() {
 
     const index = contents.findIndex((item) => item.id === current?.id);
 
+    if (index < 0) {
+      return;
+    }
+
     container.scroll({
       top: DEFAULT_ITEM_HEIGHT * index,
     });
