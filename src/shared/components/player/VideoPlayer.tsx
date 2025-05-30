@@ -53,6 +53,26 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
   }, [duration]);
 
   useEffect(() => {
+    if (!isPlay) {
+      return;
+    }
+
+    const intervalId = setInterval(() => {
+      const video = videoRef.current;
+
+      if (!video) {
+        return;
+      }
+
+      setCurrentTime(video.currentTime);
+    }, 10);
+
+    return () => {
+      intervalId && clearInterval(intervalId);
+    };
+  }, [isPlay]);
+
+  useEffect(() => {
     window.addEventListener('mouseup', handleMouseUp);
     window.addEventListener('mousemove', handleMouseMove);
 
@@ -117,16 +137,6 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
     setDuration(videoRef.current.duration);
   };
 
-  const handleTimeUpdate = () => {
-    if (!videoRef.current) {
-      return;
-    }
-
-    const currentTime = videoRef.current.currentTime;
-
-    setCurrentTime(currentTime);
-  };
-
   const handleMouseUp = (e: MouseEvent) => {
     const video = videoRef.current;
 
@@ -188,7 +198,6 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
         src={src}
         autoPlay={autoPlay}
         onLoadedMetadataCapture={handleLoadedMetadata}
-        onTimeUpdate={handleTimeUpdate}
         onPlay={() => setIsPlay(true)}
         onPause={() => setIsPlay(false)}
       />
