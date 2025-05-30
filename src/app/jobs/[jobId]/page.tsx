@@ -1,6 +1,8 @@
 import SttContents from '@/app/jobs/[jobId]/_components/SttContents';
 import SttContentsProvider from '@/app/jobs/[jobId]/_components/SttContentsProvider';
 
+import VideoPlayerProvider from '@/shared/components/player/VideoPlayerProvider';
+
 import { VideoContents } from './_components/VideoContents';
 
 export default async function JobPage({ params }: { params: Promise<{ jobId: string }> }) {
@@ -12,7 +14,9 @@ export default async function JobPage({ params }: { params: Promise<{ jobId: str
         {/*  contents  */}
         <div className="flex flex-col gap-3">
           <div className="">
-            <VideoContents jobId={jobId} />
+            <VideoPlayerProvider>
+              <VideoContents jobId={jobId} />
+            </VideoPlayerProvider>
           </div>
           <div className="">화자</div>
         </div>
