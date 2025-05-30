@@ -3,9 +3,8 @@ import { useContext, useEffect, useRef, useState } from 'react';
 import { FaPause, FaPlay } from 'react-icons/fa6';
 import { GrRevert } from 'react-icons/gr';
 
-import { TimeCode } from '@/domain/timecode/model/timecode';
-
 import { VideoPlayerContext } from '@/shared/components/player/VideoPlayerProvider';
+import { TimeCode } from '@/shared/utils/timecode/TimeCode';
 
 import cx from 'classnames';
 
@@ -61,7 +60,7 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
       window.removeEventListener('mouseup', handleMouseUp);
       window.removeEventListener('mousemove', handleMouseMove);
     };
-  }, [isDragging]);
+  }, [isDragging, currentTime]);
 
   // handle
   const resizeVideoWidth = () => {
@@ -94,7 +93,18 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
 
     const rect = progressBar.getBoundingClientRect();
     const clickX = clientX - rect.left;
-    return (clickX / rect.width) * video.duration;
+
+    const current = (clickX / rect.width) * video.duration;
+
+    if (current < 0) {
+      return 0;
+    }
+
+    if (current > duration) {
+      return duration;
+    }
+
+    return current;
   };
 
   const handleLoadedMetadata = () => {
@@ -118,28 +128,31 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
   };
 
   const handleMouseUp = (e: MouseEvent) => {
-    setIsDragging(false);
-  };
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    const video = videoRef.current;
-
-    if (!video) {
-      return;
-    }
-
-    setIsDragging(true);
-
-    video.currentTime = calculateSeekTime(e.clientX);
-  };
-
-  const handleMouseMove = (e: MouseEvent) => {
     const video = videoRef.current;
 
     if (!isDragging || !video) {
       return;
     }
 
-    video.currentTime = calculateSeekTime(e.clientX);
+    setIsDragging(false);
+
+    video.currentTime = currentTime;
+
+    handlePlay();
+  };
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    handlePause();
+    setIsDragging(true);
+
+    setCurrentTime(calculateSeekTime(e.clientX));
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isDragging) {
+      return;
+    }
+
+    setCurrentTime(calculateSeekTime(e.clientX));
   };
 
   const handlePlay = () => {
@@ -183,7 +196,7 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
       {/* control */}
       <div
         className={cx(
-          'absolute top-0 left-0 size-full rounded-2xl bg-black/20 transition-all transition-discrete',
+          'absolute top-0 left-0 size-full rounded-2xl bg-black/50 transition-all transition-discrete',
           showControl ? 'block' : 'opacity-0',
         )}
       >

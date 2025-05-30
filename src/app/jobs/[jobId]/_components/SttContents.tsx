@@ -4,7 +4,7 @@ import { useContext, useEffect } from 'react';
 
 import { SttContentsContext } from '@/app/jobs/[jobId]/_components/SttContentsProvider';
 
-import { TimeCode } from '@/domain/timecode/model/timecode';
+import { TimeCode } from '@/shared/utils/timecode/TimeCode';
 
 import cx from 'classnames';
 
