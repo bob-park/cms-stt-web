@@ -21,6 +21,7 @@ interface JobContentsProps {
 export function VideoContents({ jobId }: JobContentsProps) {
   // useRef
   const videoRef = useRef<HTMLVideoElement>(null);
+  const progressBarRef = useRef<HTMLDivElement>(null);
 
   // context
   const { contents, current, onUpdateCurrent } = useContext(SttContentsContext);
@@ -31,13 +32,29 @@ export function VideoContents({ jobId }: JobContentsProps) {
   const [duration, setDuration] = useState<number>(0);
   const [currentTime, setCurrentTime] = useState<number>(0);
 
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+
   // useEffect
   useEffect(() => {
     videoRef.current?.load();
 
     handleResizeVideoWidth();
     window.addEventListener('resize', handleResizeVideoWidth);
+
+    return () => {
+      window.removeEventListener('resize', handleResizeVideoWidth);
+    };
   }, []);
+
+  useEffect(() => {
+    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('mousemove', handleMouseMove);
+
+    return () => {
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, [isDragging]);
 
   // handle
   const handleResizeVideoWidth = () => {
@@ -86,19 +103,17 @@ export function VideoContents({ jobId }: JobContentsProps) {
     videoRef.current.pause();
   };
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
+  const calculateSeekTime = (clientX: number) => {
+    const progressBar = progressBarRef.current;
+    const video = videoRef.current;
 
-    const totalWidth = rect.width;
-    const currentWidth = e.clientX - rect.left;
-
-    if (!videoRef.current) {
-      return;
+    if (!progressBar || !video) {
+      return 0;
     }
 
-    if (e.buttons === 1) {
-      videoRef.current.currentTime = duration * (currentWidth / totalWidth);
-    }
+    const rect = progressBar.getBoundingClientRect();
+    const clickX = clientX - rect.left;
+    return (clickX / rect.width) * video.duration;
   };
 
   const handleTimeUpdate = () => {
@@ -115,9 +130,37 @@ export function VideoContents({ jobId }: JobContentsProps) {
     onUpdateCurrent && onUpdateCurrent(content?.id);
   };
 
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    const video = videoRef.current;
+
+    if (!video) {
+      return;
+    }
+
+    setIsDragging(true);
+
+    video.currentTime = calculateSeekTime(e.clientX);
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    const video = videoRef.current;
+
+    if (!isDragging || !video) {
+      return;
+    }
+
+    video.currentTime = calculateSeekTime(e.clientX);
+  };
+
   return (
     <div
-      className="relative flex flex-col items-center justify-center gap-3 rounded-2xl bg-black p-3 select-none"
+      className={cx(
+        'relative flex flex-col items-center justify-center gap-3 rounded-2xl bg-black p-3 select-none',
+        isDragging && 'cursor-pointer',
+      )}
       onMouseEnter={() => setShowControl(true)}
       onMouseLeave={() => setShowControl(false)}
     >
@@ -145,27 +188,32 @@ export function VideoContents({ jobId }: JobContentsProps) {
           <div className="absolute bottom-0 left-0 flex w-full flex-col items-center justify-center gap-1 px-5 py-2">
             {/* progress */}
             <div
-              className="relative flex h-10 w-full cursor-pointer flex-col items-center justify-center rounded-2xl"
-              onMouseMove={handleMouseMove}
+              ref={progressBarRef}
+              className="relative flex h-1 w-full cursor-pointer flex-col items-center justify-center rounded-2xl bg-gray-400"
+              onMouseDown={handleMouseDown}
             >
-              {/* duration */}
-              <div className="absolute left-0 h-1 w-full cursor-pointer rounded-2xl bg-gray-400"></div>
-
               {/* current time */}
               <div
                 className="absolute left-0 h-1 cursor-pointer rounded-l-2xl bg-red-600"
                 style={{ width: `${(currentTime / duration) * 100}%` }}
-              ></div>
+              />
 
               {/* current navigator */}
               <div
-                className="absolute top-auto size-4 rounded-full bg-red-600"
-                style={{ left: `${(currentTime / duration) * 100}%` }}
-              ></div>
+                className={cx(
+                  'absolute top-auto size-6 rounded-full transition-opacity duration-150',
+                  isDragging && 'bg-red-300/75',
+                )}
+                style={{ left: `${(currentTime / duration) * 100 - 1}%` }}
+              >
+                <div className="relative">
+                  <div className={cx('absolute top-1 left-1 size-4 rounded-full bg-red-600')} />
+                </div>
+              </div>
             </div>
 
             {/* control */}
-            <div className="-mt-2 mb-4 flex w-full flex-row items-center gap-3">
+            <div className="mb-4 flex w-full flex-row items-center gap-3">
               {/* play */}
               {currentTime >= duration ? (
                 <button

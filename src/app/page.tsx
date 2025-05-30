@@ -21,7 +21,7 @@ export default function Home() {
   return (
     <div className="flex size-full flex-col items-center justify-center gap-3 p-3">
       {/* contents */}
-      <div className="w-full max-w-96">
+      <div className="w-full max-w-[600px]">
         <ul className="list bg-base-100 rounded-box shadow-md">
           <li className="p-4 pb-2 text-xs tracking-wide opacity-60">Most played videos this week</li>
 
