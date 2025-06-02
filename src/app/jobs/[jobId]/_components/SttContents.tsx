@@ -31,7 +31,7 @@ export default function SttContents() {
   }, [current]);
 
   return (
-    <div className="bg-base-200 flex size-full flex-col items-center justify-center rounded-2xl p-3 shadow-md">
+    <div className="bg-base-200 flex size-full flex-col items-center justify-center rounded-2xl shadow-md">
       <ul id={ID_STT_CONTAINER} className="list bg-base-100 rounded-box relative m-3 size-full overflow-auto shadow-md">
         <li className="sticky top-0 z-100 bg-white p-4 pb-2 text-xs tracking-wide">자막</li>
 

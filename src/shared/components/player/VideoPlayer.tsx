@@ -1,6 +1,6 @@
 import { useContext, useEffect, useRef, useState } from 'react';
 
-import { FaPause, FaPlay } from 'react-icons/fa6';
+import { FaPause, FaPlay, FaVolumeHigh, FaVolumeLow, FaVolumeXmark } from 'react-icons/fa6';
 import { GrRevert } from 'react-icons/gr';
 
 import { VideoPlayerContext } from '@/shared/components/player/VideoPlayerProvider';
@@ -8,6 +8,7 @@ import { TimeCode } from '@/shared/utils/timecode/TimeCode';
 
 import cx from 'classnames';
 
+const STANDARD_WIDTH_PADDING = 100;
 const STANDARD_WIDTH = 1024;
 const STANDARD_TEXT_WIDTH = 450;
 
@@ -28,19 +29,68 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
   // state
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [showControl, setShowControl] = useState<boolean>(false);
+
   const [isPlay, setIsPlay] = useState<boolean>(false);
   const [duration, setDuration] = useState<number>(0);
   const [currentTime, setCurrentTime] = useState<number>(0);
+
+  const [isMute, setIsMute] = useState<boolean>(false);
+  const [volume, setVolume] = useState<number>(100);
 
   // useEffect
   useEffect(() => {
     videoRef.current?.load();
 
     resizeVideoWidth();
+    function handleKeyDown(e: KeyboardEvent) {
+      e.preventDefault();
+
+      const video = videoRef.current;
+
+      if (!video) {
+        return;
+      }
+
+      switch (e.key) {
+        case ' ': {
+          video.paused ? handlePlay() : handlePause();
+          break;
+        }
+        case 'ArrowRight': {
+          handleForward(10);
+          break;
+        }
+        case 'ArrowLeft': {
+          handleForward(-10);
+          break;
+        }
+        case 'm': {
+          handleMute(!video.muted);
+          break;
+        }
+        case 'ArrowUp': {
+          const volumeSize = video.volume * 100 + 10;
+          handleVolume(volumeSize);
+          break;
+        }
+        case 'ArrowDown': {
+          const volumeSize = video.volume * 100 - 10;
+          handleVolume(volumeSize);
+          break;
+        }
+        default: {
+          break;
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+
     window.addEventListener('resize', resizeVideoWidth);
 
     return () => {
       window.removeEventListener('resize', resizeVideoWidth);
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
 
@@ -82,6 +132,10 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
     };
   }, [isDragging, currentTime]);
 
+  useEffect(() => {
+    handleVolume(volume);
+  }, [volume]);
+
   // handle
   const resizeVideoWidth = () => {
     if (!videoRef.current) {
@@ -92,7 +146,7 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
 
     const vw = window.innerWidth;
 
-    let videoWidth = vw - 60;
+    let videoWidth = vw - STANDARD_WIDTH_PADDING;
     const videoHeight = '100%';
 
     if (vw > STANDARD_WIDTH) {
@@ -181,6 +235,62 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
     videoRef.current.pause();
   };
 
+  const handleForward = (time: number) => {
+    const video = videoRef.current;
+
+    if (!video) {
+      return;
+    }
+
+    let nowTime = video.currentTime + time;
+
+    if (nowTime >= duration) {
+      nowTime = duration;
+    }
+
+    if (nowTime < 0) {
+      nowTime = 0;
+    }
+
+    video.currentTime = nowTime;
+
+    setCurrentTime(nowTime);
+  };
+
+  const handleVolume = (size: number) => {
+    const video = videoRef.current;
+
+    if (!video) {
+      return;
+    }
+
+    let volumeSize = size;
+
+    if (volumeSize > 100) {
+      volumeSize = 100;
+    }
+
+    if (volumeSize < 0) {
+      volumeSize = 0;
+    }
+
+    setVolume(volumeSize);
+
+    video.volume = volumeSize / 100;
+  };
+
+  const handleMute = (mute: boolean) => {
+    const video = videoRef.current;
+
+    if (!video) {
+      return;
+    }
+
+    video.muted = mute;
+
+    setIsMute(mute);
+  };
+
   return (
     <div
       className={cx(
@@ -189,6 +299,7 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
       )}
       onMouseEnter={() => setShowControl(true)}
       onMouseLeave={() => setShowControl(false)}
+      onDoubleClick={() => (isPlay ? handlePause() : handlePlay())}
     >
       {/* video */}
       <video
@@ -226,19 +337,19 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
               {/* current navigator */}
               <div
                 className={cx(
-                  'absolute top-auto size-6 rounded-full transition-opacity duration-150',
+                  'absolute top-auto size-5 rounded-full transition-opacity duration-150',
                   isDragging && 'bg-red-300/75',
                 )}
                 style={{ left: `${(currentTime / duration) * 100 - 0.7}%` }}
               >
                 <div className="relative">
-                  <div className={cx('absolute top-1 left-1 size-4 rounded-full bg-red-600')} />
+                  <div className={cx('absolute top-[2px] left-[2px] size-4 rounded-full bg-red-600')} />
                 </div>
               </div>
             </div>
 
             {/* control */}
-            <div className="mb-4 flex w-full flex-row items-center gap-3">
+            <div className="my-2 flex w-full flex-row items-center gap-3">
               {/* play */}
               {currentTime >= duration ? (
                 <button
@@ -266,6 +377,30 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
                   {isPlay ? <FaPause className="size-6" /> : <FaPlay className="size-6" />}
                 </button>
               )}
+
+              {/* volumes */}
+              <div className="flex flex-row items-center justify-center gap-1">
+                <button
+                  className="btn btn-ghost text-gray-300 hover:text-black"
+                  type="button"
+                  onClick={() => handleMute(!isMute)}
+                >
+                  {(isMute || volume <= 0) && <FaVolumeXmark className="size-6" />}
+                  {!isMute && volume > 0 && volume < 30 && <FaVolumeLow className="size-6" />}
+                  {!isMute && volume >= 30 && <FaVolumeHigh className="size-6" />}
+                </button>
+
+                <div className="w-24">
+                  <input
+                    className="range range-xs text-white [--range-bg:gray] [--range-fill:1] [--range-thumb:black]"
+                    type="range"
+                    max={100}
+                    min={0}
+                    value={isMute ? 0 : volume}
+                    onChange={(e) => handleVolume(parseInt(e.currentTarget.value, 0))}
+                  />
+                </div>
+              </div>
 
               {/* time */}
               <div className="flex flex-row items-center justify-center gap-3 text-gray-300">
