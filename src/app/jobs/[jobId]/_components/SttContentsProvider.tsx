@@ -25,7 +25,7 @@ export default function SttContentsProvider({ children, assetId, jobId }: SttCon
   const [current, setCurrent] = useState<AssetSttText>();
 
   // query
-  const { texts } = useAssetSttText({ assetId, jobId, params: { page: 0, size: 200 } });
+  const { texts } = useAssetSttText({ assetId, jobId, params: { page: 0, size: 1_000 } });
 
   // memorize
   const memoContextValue = useMemo(

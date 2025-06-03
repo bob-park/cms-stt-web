@@ -10,21 +10,21 @@ export default async function JobPage({ params }: { params: Promise<{ jobId: str
 
   return (
     <SttContentsProvider assetId={1} jobId={jobId}>
-      <div className="flex size-full flex-col gap-3 lg:flex-row">
-        {/*  contents  */}
-        <div className="flex flex-col gap-3">
-          <div className="">
-            <VideoPlayerProvider>
+      <VideoPlayerProvider>
+        <div className="flex size-full flex-col gap-3 lg:flex-row">
+          {/*  contents  */}
+          <div className="flex flex-col gap-3">
+            <div className="">
               <VideoContents jobId={jobId} />
-            </VideoPlayerProvider>
+            </div>
+            <div className="">화자</div>
           </div>
-          <div className="">화자</div>
-        </div>
 
-        <div className="h-[500px] w-full lg:h-[calc(100vh-250px)] lg:w-[450px] lg:flex-none lg:shrink">
-          <SttContents />
+          <div className="h-[500px] w-full lg:h-[calc(100vh-250px)] lg:w-[450px] lg:flex-none lg:shrink">
+            <SttContents />
+          </div>
         </div>
-      </div>
+      </VideoPlayerProvider>
     </SttContentsProvider>
   );
 }

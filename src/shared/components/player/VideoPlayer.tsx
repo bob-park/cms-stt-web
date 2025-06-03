@@ -32,7 +32,7 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
   const progressBarRef = useRef<HTMLDivElement>(null);
 
   // context
-  const { onDurationUpdate, onTimeUpdate } = useContext(VideoPlayerContext);
+  const { manualCurrentTime, onDurationUpdate, onTimeUpdate } = useContext(VideoPlayerContext);
 
   // state
   const [actionHistories, setActionHistories] = useState<ActionStatus[]>([]);
@@ -169,6 +169,10 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
   }, [showControl, isHoverControl]);
 
   useEffect(() => {
+    if (actionHistories.length === 0) {
+      return;
+    }
+
     const timeoutId = setTimeout(() => {
       setActionHistories((prev) => prev.filter((_, index) => index !== 0));
     }, 1_000);
@@ -177,6 +181,16 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
       timeoutId && clearTimeout(timeoutId);
     };
   }, [actionHistories]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+
+    if (!video) {
+      return;
+    }
+
+    video.currentTime = manualCurrentTime;
+  }, [manualCurrentTime]);
 
   // handle
   const resizeVideoWidth = () => {
@@ -216,8 +230,8 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
       return 0;
     }
 
-    if (current > duration) {
-      return duration;
+    if (current > video.duration) {
+      return video.duration;
     }
 
     return current;
@@ -267,6 +281,8 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
     }
 
     videoRef.current.play();
+
+    setCurrentTime(videoRef.current.currentTime);
   };
 
   const handlePause = () => {
@@ -275,6 +291,8 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
     }
 
     videoRef.current.pause();
+
+    setCurrentTime(videoRef.current.currentTime);
   };
 
   const handleForward = (time: number) => {
@@ -286,8 +304,8 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
 
     let nowTime = video.currentTime + time;
 
-    if (nowTime >= duration) {
-      nowTime = duration;
+    if (nowTime >= video.duration) {
+      nowTime = video.duration;
     }
 
     if (nowTime < 0) {
@@ -430,7 +448,7 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
               {/* current time */}
               <div
                 className="absolute left-0 h-1 cursor-pointer rounded-l-2xl bg-red-600"
-                style={{ width: `${(currentTime / duration) * 100}%` }}
+                style={{ width: `${(currentTime / (videoRef.current?.duration ?? 0)) * 100}%` }}
               />
 
               {/* current navigator */}
@@ -439,7 +457,7 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
                   'absolute top-auto size-5 rounded-full transition-opacity duration-150',
                   isDragging && 'bg-red-300/75',
                 )}
-                style={{ left: `${(currentTime / duration) * 100 - 0.7}%` }}
+                style={{ left: `${(currentTime / (videoRef.current?.duration ?? 0)) * 100 - 0.7}%` }}
               >
                 <div className="relative">
                   <div className={cx('absolute top-[2px] left-[2px] size-4 rounded-full bg-red-600')} />
@@ -450,7 +468,7 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
             {/* control */}
             <div className="my-2 flex w-full flex-row items-center gap-3">
               {/* play */}
-              {currentTime >= duration ? (
+              {currentTime >= (videoRef.current?.duration ?? 0) ? (
                 <button
                   className="btn btn-ghost text-gray-300 hover:text-black"
                   type="button"
@@ -514,7 +532,7 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
 
                 {/* duration */}
                 <div>
-                  <span>{new TimeCode(duration).toString()}</span>
+                  <span>{new TimeCode(videoRef.current?.duration ?? 0).toString()}</span>
                 </div>
               </div>
             </div>
