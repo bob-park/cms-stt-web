@@ -33,7 +33,7 @@ export function VideoContents({ jobId }: JobContentsProps) {
       </div>
 
       {/* stt text */}
-      <div className={cx('absolute bottom-20 left-auto flex w-full items-center justify-center gap-3')}>
+      <div className={cx('absolute bottom-20 left-auto z-0 flex w-full items-center justify-center gap-3')}>
         {current && (
           <div className="flex w-fit flex-col items-center justify-center gap-1 rounded-2xl bg-black/50 px-2 py-2 text-lg text-white">
             <div className="">

@@ -381,7 +381,7 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
       {/* control */}
       <div
         className={cx(
-          'absolute top-0 left-0 size-full rounded-2xl bg-black/50 transition-all transition-discrete',
+          'absolute top-0 left-0 z-50 size-full rounded-2xl bg-black/50 transition-all transition-discrete',
           showControl ? 'block' : 'opacity-0',
         )}
       >
