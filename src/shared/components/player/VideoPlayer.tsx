@@ -1,12 +1,13 @@
 import { useContext, useEffect, useRef, useState } from 'react';
 
-import { FaPause, FaPlay, FaVolumeHigh, FaVolumeLow, FaVolumeXmark } from 'react-icons/fa6';
+import { FaBackward, FaForward, FaPause, FaPlay, FaVolumeHigh, FaVolumeLow, FaVolumeXmark } from 'react-icons/fa6';
 import { GrRevert } from 'react-icons/gr';
 
 import { VideoPlayerContext } from '@/shared/components/player/VideoPlayerProvider';
 import { TimeCode } from '@/shared/utils/timecode/TimeCode';
 
 import cx from 'classnames';
+import { v4 as uuid } from 'uuid';
 
 const STANDARD_WIDTH_PADDING = 100;
 const STANDARD_WIDTH = 1024;
@@ -18,6 +19,13 @@ interface VideoPlayerProps {
   onUpdateTime?: () => void;
 }
 
+type VideoAction = 'played' | 'paused' | 'forward' | 'backward';
+
+interface ActionStatus {
+  id: string;
+  action: VideoAction;
+}
+
 export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Readonly<VideoPlayerProps>) {
   // ref
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -27,8 +35,11 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
   const { onDurationUpdate, onTimeUpdate } = useContext(VideoPlayerContext);
 
   // state
+  const [actionHistories, setActionHistories] = useState<ActionStatus[]>([]);
+
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [showControl, setShowControl] = useState<boolean>(false);
+  const [isHoverControl, setIsHoverControl] = useState<boolean>(false);
 
   const [isPlay, setIsPlay] = useState<boolean>(false);
   const [duration, setDuration] = useState<number>(0);
@@ -54,18 +65,23 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
       switch (e.key) {
         case ' ': {
           video.paused ? handlePlay() : handlePause();
+
+          handleAddActionHistory(!video.paused ? 'played' : 'paused');
           break;
         }
         case 'ArrowRight': {
           handleForward(10);
+          handleAddActionHistory('forward');
           break;
         }
         case 'ArrowLeft': {
           handleForward(-10);
+          handleAddActionHistory('backward');
           break;
         }
         case 'm': {
           handleMute(!video.muted);
+
           break;
         }
         case 'ArrowUp': {
@@ -82,6 +98,8 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
           break;
         }
       }
+
+      setShowControl(true);
     }
 
     window.addEventListener('keydown', handleKeyDown);
@@ -135,6 +153,30 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
   useEffect(() => {
     handleVolume(volume);
   }, [volume]);
+
+  useEffect(() => {
+    if (!showControl || isHoverControl) {
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      setShowControl(false);
+    }, 1_000);
+
+    return () => {
+      timeoutId && clearTimeout(timeoutId);
+    };
+  }, [showControl, isHoverControl]);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setActionHistories((prev) => prev.filter((_, index) => index !== 0));
+    }, 1_000);
+
+    return () => {
+      timeoutId && clearTimeout(timeoutId);
+    };
+  }, [actionHistories]);
 
   // handle
   const resizeVideoWidth = () => {
@@ -291,14 +333,37 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
     setIsMute(mute);
   };
 
+  const handleAddActionHistory = (action: VideoAction) => {
+    setActionHistories((prev) => {
+      const newActionHistories = prev.slice();
+
+      if (newActionHistories.length > 0) {
+        newActionHistories.splice(0, 1);
+      }
+
+      newActionHistories.push({
+        id: uuid(),
+        action: action,
+      });
+
+      return newActionHistories;
+    });
+  };
+
   return (
     <div
       className={cx(
         'relative flex flex-col items-center justify-center gap-3 rounded-2xl bg-black p-3 select-none',
         isDragging && 'cursor-pointer',
       )}
-      onMouseEnter={() => setShowControl(true)}
-      onMouseLeave={() => setShowControl(false)}
+      onMouseEnter={() => {
+        setShowControl(true);
+        setIsHoverControl(true);
+      }}
+      onMouseLeave={() => {
+        setShowControl(false);
+        setIsHoverControl(false);
+      }}
       onDoubleClick={() => (isPlay ? handlePause() : handlePlay())}
     >
       {/* video */}
@@ -321,6 +386,40 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
         )}
       >
         <div className="relative size-full">
+          {/* action */}
+          {actionHistories.length > 0 && (
+            <div
+              className={cx('absolute top-1/3 flex w-full flex-row items-center px-10', {
+                'scale-110 justify-center': ['played', 'paused'].includes(actionHistories[0].action),
+                'justify-end': ['forward'].includes(actionHistories[0].action),
+                'justify-start': ['backward'].includes(actionHistories[0].action),
+              })}
+            >
+              <div className="rounded-full bg-black/50 p-8">
+                {'played' === actionHistories[0].action && (
+                  <div className="text-white">
+                    <FaPlay className="size-24" />
+                  </div>
+                )}
+                {'paused' === actionHistories[0].action && (
+                  <div className="text-white">
+                    <FaPause className="size-24" />
+                  </div>
+                )}
+                {'forward' === actionHistories[0].action && (
+                  <div className="text-white">
+                    <FaForward className="size-24" />
+                  </div>
+                )}
+                {'backward' === actionHistories[0].action && (
+                  <div className="text-white">
+                    <FaBackward className="size-24" />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           <div className="absolute bottom-0 left-0 flex w-full flex-col items-center justify-center gap-1 px-5 py-2">
             {/* progress */}
             <div
