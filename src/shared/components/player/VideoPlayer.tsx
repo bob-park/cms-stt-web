@@ -353,7 +353,7 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
   return (
     <div
       className={cx(
-        'relative flex flex-col items-center justify-center gap-3 rounded-2xl bg-black p-3 select-none',
+        'relative flex flex-col items-center justify-center gap-3 rounded-2xl bg-black p-1 select-none',
         isDragging && 'cursor-pointer',
       )}
       onMouseEnter={() => {
