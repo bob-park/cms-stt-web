@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useMemo, useState } from 'react';
+import { createContext, use, useEffect, useMemo, useState } from 'react';
 
 import { useAssetSttText } from '@/domain/assets/query/assetSttText';
 
@@ -28,7 +28,7 @@ export default function SttContentsProvider({ children, assetId, jobId }: SttCon
   const { texts } = useAssetSttText({ assetId, jobId, params: { page: 0, size: 1_000 } });
 
   // memorize
-  const memoContextValue = useMemo(
+  const memoContextValue = useMemo<SttContentsContextState>(
     () => ({
       contents: texts?.content || [],
       current,

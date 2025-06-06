@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useContext, useEffect } from 'react';
+import { memo, useContext, useEffect, useState } from 'react';
 
 import { VideoPlayerContext } from '@/shared/components/player/VideoPlayerProvider';
 import { TimeCode } from '@/shared/utils/timecode/TimeCode';
@@ -17,18 +17,33 @@ export default function SttContents() {
   const { contents, current } = useContext(SttContentsContext);
   const { onUpdateCurrentTime } = useContext(VideoPlayerContext);
 
+  // state
+  const [loaded, setLoaded] = useState<boolean>(false);
+
+  // useEffect
+  useEffect(() => {
+    contents.length > 0 && setLoaded(true);
+  }, [contents]);
+
   return (
     <div className="bg-base-200 flex size-full flex-col items-center justify-center rounded-2xl shadow-md">
-      <MemorizeSttContentList contents={contents} current={current} onRowClick={(time) => onUpdateCurrentTime(time)} />
+      <MemorizeSttContentList
+        loaded={loaded}
+        contents={contents}
+        current={current}
+        onRowClick={(time) => onUpdateCurrentTime(time)}
+      />
     </div>
   );
 }
 
 const SttContentList = ({
+  loaded,
   contents,
   current,
   onRowClick,
 }: {
+  loaded: boolean;
   contents: AssetSttText[];
   current?: AssetSttText;
   onRowClick?: (time: number) => void;
@@ -80,4 +95,10 @@ const SttContentList = ({
   );
 };
 
-const MemorizeSttContentList = memo(SttContentList, (prev, next) => prev.current === next.current);
+const MemorizeSttContentList = memo(SttContentList, (prev, next) => {
+  if (prev.loaded !== next.loaded && next.loaded) {
+    return false;
+  }
+
+  return prev.current === next.current;
+});
