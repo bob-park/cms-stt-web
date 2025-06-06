@@ -9,9 +9,10 @@ import { TimeCode } from '@/shared/utils/timecode/TimeCode';
 import cx from 'classnames';
 import { v4 as uuid } from 'uuid';
 
-const STANDARD_WIDTH_PADDING = 100;
+const STANDARD_WIDTH_PADDING = 60;
 const STANDARD_WIDTH = 1024;
 const STANDARD_TEXT_WIDTH = 450;
+const MIN_WIDTH = 560;
 
 interface VideoPlayerProps {
   src: string;
@@ -53,6 +54,7 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
     videoRef.current?.load();
 
     resizeVideoWidth();
+
     function handleKeyDown(e: KeyboardEvent) {
       e.preventDefault();
 
@@ -207,6 +209,10 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
 
     if (vw > STANDARD_WIDTH) {
       videoWidth -= STANDARD_TEXT_WIDTH;
+    }
+
+    if (vw < MIN_WIDTH) {
+      videoWidth = MIN_WIDTH - STANDARD_WIDTH_PADDING;
     }
 
     video.style.width = `${videoWidth}px`;
@@ -370,7 +376,7 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
   return (
     <div
       className={cx(
-        'sise-full relative flex flex-col items-center justify-center gap-3 rounded-2xl bg-black py-2 select-none',
+        'relative flex size-fit flex-col items-center justify-center rounded-2xl bg-black select-none',
         isDragging && 'cursor-pointer',
       )}
       onMouseEnter={() => {
@@ -386,7 +392,7 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
       {/* video */}
       <video
         ref={videoRef}
-        className="aspect-video size-full max-h-[800px]"
+        className="max-h-[800px] rounded-2xl"
         src={src}
         autoPlay={autoPlay}
         onLoadedMetadataCapture={handleLoadedMetadata}
