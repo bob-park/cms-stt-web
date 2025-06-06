@@ -13,7 +13,7 @@ export default async function JobPage({ params }: { params: Promise<{ jobId: str
       <VideoPlayerProvider>
         <div className="flex size-full flex-col gap-3 lg:flex-row">
           {/*  contents  */}
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-1 flex-col gap-3">
             <div className="">
               <VideoContents jobId={jobId} />
             </div>

@@ -238,13 +238,12 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
   };
 
   const handleLoadedMetadata = () => {
-    resizeVideoWidth();
-
     if (!videoRef.current) {
       return;
     }
 
     setDuration(videoRef.current.duration);
+    resizeVideoWidth();
   };
 
   const handleMouseUp = (e: MouseEvent) => {
@@ -371,7 +370,7 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
   return (
     <div
       className={cx(
-        'relative flex flex-col items-center justify-center gap-3 rounded-2xl bg-black p-1 select-none',
+        'sise-full relative flex flex-col items-center justify-center gap-3 rounded-2xl bg-black py-2 select-none',
         isDragging && 'cursor-pointer',
       )}
       onMouseEnter={() => {
@@ -387,11 +386,11 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
       {/* video */}
       <video
         ref={videoRef}
-        style={{ width: '100%', height: '484px' }}
-        className="aspect-auto max-h-[800px] rounded-2xl"
+        className="aspect-video size-full max-h-[800px]"
         src={src}
         autoPlay={autoPlay}
         onLoadedMetadataCapture={handleLoadedMetadata}
+        onLoadedData={handleLoadedMetadata}
         onPlay={() => setIsPlay(true)}
         onPause={() => setIsPlay(false)}
       />
@@ -413,7 +412,7 @@ export default function VideoPlayer({ src, autoPlay = false, onUpdateTime }: Rea
                 'justify-start': ['backward'].includes(actionHistories[0].action),
               })}
             >
-              <div className="rounded-full bg-black/50 p-8">
+              <div className="rounded-full bg-gray-400/50 p-8">
                 {'played' === actionHistories[0].action && (
                   <div className="text-white">
                     <FaPlay className="size-24" />
